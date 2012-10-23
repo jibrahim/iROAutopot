@@ -187,22 +187,28 @@ namespace iRO_Autopot
 
         private void UpdateHpSp()
         {
+            int tempHp, tempSp;
+            tempHp = memory.ReadInt(MAX_HP);
+            tempSp = memory.ReadInt(MAX_SP);
             if (lockMaxHp)
-                this.maxHp = (memory.ReadInt(MAX_HP) > maxHpLock) ? maxHpLock : memory.ReadInt(MAX_HP);
+                this.maxHp = (tempHp > maxHpLock) ? maxHpLock : tempHp;
             else
-                this.maxHp = memory.ReadInt(MAX_HP);
+                this.maxHp = tempHp;
             if (lockMaxSp)
-                this.maxSp = (memory.ReadInt(MAX_SP) > maxSpLock) ? maxSpLock : memory.ReadInt(MAX_SP);
+                this.maxSp = (tempSp > maxSpLock) ? maxSpLock : tempSp;
             else
-                this.maxSp = memory.ReadInt(MAX_SP);
+                this.maxSp = tempSp;
+
             this.currentSp = memory.ReadInt(SP);
             this.currentHp = memory.ReadInt(HP);
 
-
-            if (this.currentHp > this.maxHp)
-                this.maxHp = this.currentHp;
-            if (this.currentSp > this.maxSp)
-                this.maxSp = this.currentSp;
+            if (this.updateOnPot)
+            {
+                if (this.currentHp > this.maxHp)
+                    this.maxHp = this.currentHp;
+                if (this.currentSp > this.maxSp)
+                    this.maxSp = this.currentSp;
+            }
         }
 
         private PottingArray DeterminePotting()
@@ -213,15 +219,11 @@ namespace iRO_Autopot
             ary.emergencySp = false;
             int hpPercent;
             int spPercent;
-            try
-            {
-                hpPercent = this.currentHp * 100 / this.maxHp;
-                spPercent = this.currentSp * 100 / this.maxSp;
-            }
-            catch (DivideByZeroException)
-            {
+            if (this.maxHp == 0 || this.maxSp == 0)
                 return ary;
-            }
+
+            hpPercent = this.currentHp * 100 / this.maxHp;
+            spPercent = this.currentSp * 100 / this.maxSp;
 
             if (this.SpEmergencyEnabled && this.currentSp < this.emergencySp)
                 ary.emergencySp = true;
